@@ -1,0 +1,296 @@
+body {
+  background-color:  #F6F4E9;
+  font-family: Arial, sans-serif;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+.no-offers-message {
+  color: red;
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-top: 10px;
+}
+
+
+.App {
+  text-align: center;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 40px;
+  color: #444;
+  margin-bottom: 20px;
+}
+
+.dropdown-container {
+  position: relative;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.dropdown-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.dropdown-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  position: absolute;
+  z-index: 1000;
+  width: 100%;
+}
+
+.dropdown-item {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #f0f0f0;
+}
+
+.offers-section {
+  padding: 20px;
+}
+
+.offer-group {
+  margin-bottom: 40px;
+}
+
+.offer-group h2 {
+  font-size: 30px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.offer-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.offer-card {
+  background-color: #d2e4c7;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  width: calc(33.33% - 20px);
+  width: 300px;
+}
+
+.offer-card img {
+  width: 200px;
+  border-radius: 5px;
+  height: 150px;
+  object-fit: cover;
+  margin-top: 5px;
+}
+
+.offer-info {
+  padding: 10px;
+}
+
+.offer-info h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+.offer-info p {
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+button {
+  background-color: #4CAF50;
+  color: #fff;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .offer-card {
+    width: 100%;
+  }
+
+  .offer-group h2 {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .offer-card {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  .dropdown-input{
+    width: 300px;
+  }
+}
+
+/* General Navbar Styling */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #d6d9c6;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  width: 100px;
+  height: auto;
+}
+
+.menu-button {
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: none; /* Hidden on desktop */
+}
+
+.links-container {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.link {
+  text-decoration: none;
+  color: black;
+  font-size: 14px;
+  padding: 5px 10px;
+}
+
+.login {
+  color: gray;
+  display: flex;
+  align-items: center;
+}
+
+.login i {
+  margin-right: 5px;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .menu-button {
+    display: block;
+  }
+
+  .links-container {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    background-color: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .links-container.show {
+    display: flex;
+  }
+
+  .logo-container {
+    flex-grow: 1;
+    justify-content: center;
+  }
+}
+
+
+/* Base Navbar Styles */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #CDD1C1;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  width: 100px;
+  height: 100px;
+}
+
+.linksContainer {
+  display: flex;
+  gap: 35px;
+  flex-wrap: wrap;
+}
+
+.link {
+  text-decoration: none;
+  color: black;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  transition: color 0.3s ease;
+}
+
+/* Hamburger Icon - Initially hidden */
+.hamburger {
+  font-size: 24px;
+  cursor: pointer;
+  display: none;
+}
+
+/* Media Query for Mobile Devices */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .linksContainer {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .linksContainer.open {
+    display: flex;
+  }
+
+  .hamburger {
+    display: block;
+  }
+}
+
