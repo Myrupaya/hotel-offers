@@ -171,6 +171,7 @@ const App = () => {
 
   return (
     <div className="App" style={{ fontFamily: "'Libre Baskerville', serif" }}>
+      {/* Navbar - unchanged */}
       <nav style={styles.navbar}>
         <div style={styles.logoContainer}>
           <a href="https://www.myrupaya.in/">
@@ -193,27 +194,108 @@ const App = () => {
         </div>
       </nav>
 
-      <h1>Hotel Offers</h1>
-      <div className="dropdown-container">
+      {/* Title in white container box */}
+      <div style={{
+        backgroundColor: 'white',
+        padding: '20px',
+        margin: '20px auto',
+        maxWidth: '1200px',
+        borderRadius: '5px',
+        boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+      }}>
+        <h1 style={{ color: 'black', textAlign: 'center', margin: 0 }}>Hotel Offers</h1>
+      </div>
+
+      {/* 50-50 split row */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: '20px'
+      }}>
+        {/* First section with title and paragraph */}
+        <div style={{
+          flex: '1',
+          minWidth: '300px',
+          padding: '20px'
+        }}>
+          <h2 style={{ color: '#333' }}>Find the Best Hotel Offers</h2>
+          <p style={{ lineHeight: '1.6', color: '#666' }}>
+            Discover exclusive discounts and cashback offers on hotel bookings when you use your credit or debit card. 
+            Our platform aggregates the best hotel offers from multiple travel portals to help you save money on your 
+            next stay. Simply search for your card to see available offers.
+          </p>
+        </div>
+        
+        {/* Second section with image */}
+        <div style={{
+          flex: '1',
+          minWidth: '300px',
+          padding: '20px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <img 
+            src="" 
+            alt="Hotel offers" 
+            style={{ 
+              maxWidth: '100%', 
+              height: 'auto',
+              borderRadius: '5px',
+              boxShadow: '0 3px 10px rgba(0,0,0,0.2)'
+            }} 
+          />
+        </div>
+      </div>
+
+      {/* Dropdown section - unchanged */}
+      <div className="dropdown-container" style={{ maxWidth: '600px', margin: '30px auto' }}>
         <input
           type="text"
           value={query}
           onChange={handleInputChange}
           placeholder="Type a Credit/Debit Card..."
           className="dropdown-input"
+          style={{
+            width: "100%",
+            padding: "12px",
+            fontSize: "16px",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+          }}
         />
         {filteredCards.length > 0 && (
-          <ul className="dropdown-list">
+          <ul className="dropdown-list" style={{
+            listStyleType: "none",
+            padding: "10px",
+            margin: 0,
+            width: "100%",
+            maxHeight: "200px",
+            overflowY: "auto",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+            backgroundColor: "#fff",
+            position: "absolute",
+            zIndex: 1000,
+          }}>
             {filteredCards.map((item, index) =>
               item.type === "heading" ? (
-                <li key={index} className="dropdown-heading">
-                  <strong>{item.label}</strong>
+                <li key={index} style={{ padding: "10px", fontWeight: "bold" }}>
+                  {item.label}
                 </li>
               ) : (
                 <li
                   key={index}
                   onClick={() => handleCardSelection(item.card)}
-                  className="dropdown-item"
+                  style={{
+                    padding: "10px",
+                    cursor: "pointer",
+                    borderBottom: index !== filteredCards.length - 1 ? "1px solid #eee" : "none",
+                  }}
+                  onMouseOver={(e) => (e.target.style.backgroundColor = "#f0f0f0")}
+                  onMouseOut={(e) => (e.target.style.backgroundColor = "transparent")}
                 >
                   {item.card}
                 </li>
@@ -224,13 +306,14 @@ const App = () => {
       </div>
 
       {noOffers && (
-        <div style={{ color: "red", marginTop: "10px" }}>
+        <div style={{ color: "red", marginTop: "10px", textAlign: 'center' }}>
           No offers found for this card.
         </div>
       )}
 
+      {/* Offers section - unchanged */}
       {selectedCard && !noOffers && (
-        <div className="offers-section">
+        <div className="offers-section" style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
           {selectedUpdatedCardOffers.length > 0 && (
             <div className="offer-group">
               <h2>Some permanent offers on the selected credit card</h2>
@@ -345,10 +428,81 @@ const App = () => {
           )}
         </div>
       )}
+
+      {/* FAQ section with 3 columns */}
+      <div style={{
+        maxWidth: '1200px',
+        margin: '50px auto',
+        padding: '20px'
+      }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '30px' }}>Frequently Asked Questions</h2>
+        
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '20px',
+          justifyContent: 'space-between'
+        }}>
+          {/* Column 1 */}
+          <div style={{
+            flex: '1',
+            minWidth: '300px',
+            padding: '20px',
+            borderRadius: '5px',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+          }}>
+            <h3 style={{ color: '#333', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
+              How do I use these hotel offers?
+            </h3>
+            <p style={{ lineHeight: '1.6', color: '#666' }}>
+              Search for your credit or debit card to see available hotel offers. When you find an offer you want to use, 
+              click "View Details" to be redirected to the booking website. Make sure to use the same card during checkout 
+              to avail the discount or cashback.
+            </p>
+          </div>
+          
+          {/* Column 2 */}
+          <div style={{
+            flex: '1',
+            minWidth: '300px',
+            padding: '20px',
+            borderRadius: '5px',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+          }}>
+            <h3 style={{ color: '#333', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
+              Are these offers valid for international hotels?
+            </h3>
+            <p style={{ lineHeight: '1.6', color: '#666' }}>
+              Most offers are valid for both domestic and international hotels, but some may have restrictions. 
+              Please check the terms and conditions of each offer before booking. The offer details will specify 
+              if there are any limitations on hotel locations or chains.
+            </p>
+          </div>
+          
+          {/* Column 3 */}
+          <div style={{
+            flex: '1',
+            minWidth: '300px',
+            padding: '20px',
+            borderRadius: '5px',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+          }}>
+            <h3 style={{ color: '#333', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
+              How often are new hotel offers added?
+            </h3>
+            <p style={{ lineHeight: '1.6', color: '#666' }}>
+              We update our database regularly as new offers become available. Hotel offers often change seasonally, 
+              especially around holidays and peak travel times. We recommend checking back frequently before 
+              booking your stay to ensure you get the best available deal.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
+// Styles unchanged from original
 const styles = {
   navbar: {
     display: "flex",
