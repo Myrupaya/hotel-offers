@@ -1,10 +1,14 @@
 body {
- @apply min-h-screen;
-  background-color: linear-gradient(to bottom, #999792, #cecdc9);
   font-family: Arial, sans-serif;
   color: #333;
   margin: 0;
   padding: 0;
+}
+
+body{
+   @apply min-h-screen;
+  background: linear-gradient(to bottom, #999792, #cecdc9);
+
 }
 
 
