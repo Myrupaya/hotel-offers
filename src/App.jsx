@@ -171,28 +171,8 @@ const App = () => {
 
   return (
     <div className="App" style={{ fontFamily: "'Libre Baskerville', serif" }}>
-      {/* Navbar - unchanged */}
-      <nav style={styles.navbar}>
-        <div style={styles.logoContainer}>
-          <a href="https://www.myrupaya.in/">
-            <img
-              src="https://static.wixstatic.com/media/f836e8_26da4bf726c3475eabd6578d7546c3b2~mv2.jpg/v1/crop/x_124,y_0,w_3152,h_1458/fill/w_909,h_420,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/dark_logo_white_background.jpg"
-              alt="MyRupaya Logo"
-              style={styles.logo}
-            />
-          </a>
-          <div
-            style={{
-              ...styles.linksContainer,
-              ...(isMobileMenuOpen ? styles.mobileMenuOpen : {}),
-            }}
-          >
-            <a href="https://www.myrupaya.in/" style={styles.link}>
-              Home
-            </a>
-          </div>
-        </div>
-      </nav>
+
+   
 
       {/* Title in white container box */}
       <div style={{
@@ -429,75 +409,7 @@ const App = () => {
         </div>
       )}
 
-      {/* FAQ section with 3 columns */}
-      <div style={{
-        maxWidth: '1200px',
-        margin: '50px auto',
-        padding: '20px'
-      }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '30px' }}>Frequently Asked Questions</h2>
-        
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '20px',
-          justifyContent: 'space-between'
-        }}>
-          {/* Column 1 */}
-          <div style={{
-            flex: '1',
-            minWidth: '300px',
-            padding: '20px',
-            borderRadius: '5px',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-          }}>
-            <h3 style={{ color: '#333', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
-              How do I use these hotel offers?
-            </h3>
-            <p style={{ lineHeight: '1.6', color: '#666' }}>
-              Search for your credit or debit card to see available hotel offers. When you find an offer you want to use, 
-              click "View Details" to be redirected to the booking website. Make sure to use the same card during checkout 
-              to avail the discount or cashback.
-            </p>
-          </div>
-          
-          {/* Column 2 */}
-          <div style={{
-            flex: '1',
-            minWidth: '300px',
-            padding: '20px',
-            borderRadius: '5px',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-          }}>
-            <h3 style={{ color: '#333', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
-              Are these offers valid for international hotels?
-            </h3>
-            <p style={{ lineHeight: '1.6', color: '#666' }}>
-              Most offers are valid for both domestic and international hotels, but some may have restrictions. 
-              Please check the terms and conditions of each offer before booking. The offer details will specify 
-              if there are any limitations on hotel locations or chains.
-            </p>
-          </div>
-          
-          {/* Column 3 */}
-          <div style={{
-            flex: '1',
-            minWidth: '300px',
-            padding: '20px',
-            borderRadius: '5px',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-          }}>
-            <h3 style={{ color: '#333', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
-              How often are new hotel offers added?
-            </h3>
-            <p style={{ lineHeight: '1.6', color: '#666' }}>
-              We update our database regularly as new offers become available. Hotel offers often change seasonally, 
-              especially around holidays and peak travel times. We recommend checking back frequently before 
-              booking your stay to ensure you get the best available deal.
-            </p>
-          </div>
-        </div>
-      </div>
+ 
     </div>
   );
 };
