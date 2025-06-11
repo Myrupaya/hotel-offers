@@ -13,74 +13,95 @@ const App = () => {
   const [yatraOffers, setYatraOffers] = useState([]);
   const [clearOffers, setClearOffers] = useState([]);
   const [ixigoOffers, setIxigoOffers] = useState([]);
+  const [makeOffers, setMakeOffers] = useState([]);
   const [hotelOffers, setHotelOffers] = useState([]);
   const [updatedCreditCards, setUpdatedCreditCards] = useState([]);
   const [noOffers, setNoOffers] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchCSVData = async () => {
-      try {
-        const files = [
-          { name: "EASE HOTEL.csv", setter: setEaseOffers },
-          { name: "YATRA HOTEL.csv", setter: setYatraOffers },
-          { name: "CLEAR HOTEL.csv", setter: setClearOffers },
-          { name: "IXIGO HOTEL.csv", setter: setIxigoOffers },
-          { name: "Hotel-offers.csv", setter: setHotelOffers },
-          { name: "Updated_Credit_Cards_with_Image_Links.csv", setter: setUpdatedCreditCards },
-        ];
+useEffect(() => {
+  const fetchCSVData = async () => {
+    try {
+      const files = [
+        { name: "EASE HOTEL.csv", setter: setEaseOffers },
+        { name: "YATRA HOTEL.csv", setter: setYatraOffers },
+        { name: "CLEAR HOTEL.csv", setter: setClearOffers },
+        { name: "IXIGO HOTEL.csv", setter: setIxigoOffers },
+        { name: "Hotel-offers.csv", setter: setHotelOffers },
+        { name: "MakeMyTrip (3).csv", setter: setMakeOffers },
+        { name: "Updated_Credit_Cards_with_Image_Links.csv", setter: setUpdatedCreditCards },
+      ];
 
-        let allCreditCards = new Set();
-        let allDebitCards = new Set();
+      let allCreditCards = new Map();
+      let allDebitCards = new Map();
 
-        for (let file of files) {
-          const response = await axios.get(file.name);
-          const parsedData = Papa.parse(response.data, { header: true });
+      for (let file of files) {
+        const response = await axios.get(file.name);
+        const parsedData = Papa.parse(response.data, { header: true });
 
-          if (file.name === "Hotel-offers.csv") {
-            parsedData.data.forEach((row) => {
-              if (row["Applicable Debit Cards"]) {
-                // Clean up the card names by removing extra whitespace and newlines
-                const cards = row["Applicable Debit Cards"]
-                  .replace(/\n/g, '')  // Remove newlines
-                  .split(',')
-                  .map(card => card.trim())
-                  .filter(card => card.length > 0);
-                
-                cards.forEach((card) => {
-                  allDebitCards.add(card);
-                });
-              }
-            });
-            file.setter(parsedData.data);
-          } 
-          else if (file.name === "Updated_Credit_Cards_with_Image_Links.csv") {
-            parsedData.data.forEach((row) => {
-              if (row["Credit Card Name"]) {
-                allCreditCards.add(row["Credit Card Name"].trim());
-              }
-            });
-            file.setter(parsedData.data);
-          }
-          else {
-            parsedData.data.forEach((row) => {
-              if (row["Credit Card"]) {
-                allCreditCards.add(row["Credit Card"].trim());
-              }
-            });
-            file.setter(parsedData.data);
-          }
+        if (file.name === "Hotel-offers.csv") {
+          parsedData.data.forEach((row) => {
+            if (row["Applicable Debit Cards"]) {
+              const cards = row["Applicable Debit Cards"]
+                .replace(/\n/g, "")
+                .split(",")
+                .map(card => card.trim())
+                .filter(card => card.length > 0);
+
+              cards.forEach((card) => {
+                allDebitCards.set(card.toLowerCase(), card); // lowercase key, original value
+              });
+            }
+          });
+          file.setter(parsedData.data);
+        } 
+        else if (file.name === "Updated_Credit_Cards_with_Image_Links.csv") {
+          parsedData.data.forEach((row) => {
+            if (row["Credit Card Name"]) {
+              const card = row["Credit Card Name"].trim();
+              allCreditCards.set(card.toLowerCase(), card);
+            }
+          });
+          file.setter(parsedData.data);
         }
-
-        setCreditCards(Array.from(allCreditCards).sort());
-        setDebitCards(Array.from(allDebitCards).sort());
-      } catch (error) {
-        console.error("Error loading CSV data:", error);
+        else if (file.name === "MakeMyTrip (3).csv") {
+          parsedData.data.forEach((row) => {
+            if (row["Credit Card"]) {
+              const card = row["Credit Card"].trim();
+              allCreditCards.set(card.toLowerCase(), card);
+            }
+          });
+          file.setter(parsedData.data);
+        }
+        else {
+          parsedData.data.forEach((row) => {
+            if (row["Credit Card"]) {
+              const card = row["Credit Card"].trim();
+              allCreditCards.set(card.toLowerCase(), card);
+            }
+          });
+          file.setter(parsedData.data);
+        }
       }
-    };
 
-    fetchCSVData();
-  }, []);
+      // Convert to array and sort while preserving original case
+      const uniqueCreditCards = Array.from(allCreditCards.values()).sort((a, b) =>
+        a.toLowerCase().localeCompare(b.toLowerCase())
+      );
+      const uniqueDebitCards = Array.from(allDebitCards.values()).sort((a, b) =>
+        a.toLowerCase().localeCompare(b.toLowerCase())
+      );
+
+      setCreditCards(uniqueCreditCards);
+      setDebitCards(uniqueDebitCards);
+    } catch (error) {
+      console.error("Error loading CSV data:", error);
+    }
+  };
+
+  fetchCSVData();
+}, []);
+
 
   const handleInputChange = (event) => {
     const value = event.target.value;
@@ -136,7 +157,7 @@ const App = () => {
         return (
           offer["Applicable Debit Cards"] &&
           offer["Applicable Debit Cards"]
-            .replace(/\n/g, '')  // Remove newlines
+            .replace(/\n/g, '')
             .split(',')
             .map((c) => c.trim())
             .some(card => 
@@ -164,6 +185,7 @@ const App = () => {
 
   const selectedEaseOffers = getOffersForSelectedCard(easeOffers);
   const selectedYatraOffers = getOffersForSelectedCard(yatraOffers);
+  const selectedMakeOffers = getOffersForSelectedCard(makeOffers);
   const selectedClearOffers = getOffersForSelectedCard(clearOffers);
   const selectedIxigoOffers = getOffersForSelectedCard(ixigoOffers);
   const selectedDebitHotelOffers = getOffersForSelectedCard(hotelOffers, true);
@@ -171,29 +193,6 @@ const App = () => {
 
   return (
     <div className="App" style={{ fontFamily: "'Libre Baskerville', serif" }}>
-      {/* Navbar - unchanged */}
-      <nav style={styles.navbar}>
-        <div style={styles.logoContainer}>
-          <a href="https://www.myrupaya.in/">
-            <img
-              src="https://static.wixstatic.com/media/f836e8_26da4bf726c3475eabd6578d7546c3b2~mv2.jpg/v1/crop/x_124,y_0,w_3152,h_1458/fill/w_909,h_420,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/dark_logo_white_background.jpg"
-              alt="MyRupaya Logo"
-              style={styles.logo}
-            />
-          </a>
-          <div
-            style={{
-              ...styles.linksContainer,
-              ...(isMobileMenuOpen ? styles.mobileMenuOpen : {}),
-            }}
-          >
-            <a href="https://www.myrupaya.in/" style={styles.link}>
-              Home
-            </a>
-          </div>
-        </div>
-      </nav>
-
       {/* Title in white container box */}
       <div style={{
         backgroundColor: 'white',
@@ -250,7 +249,7 @@ const App = () => {
         </div>
       </div>
 
-      {/* Dropdown section - unchanged */}
+      {/* Dropdown section */}
       <div className="dropdown-container" style={{ maxWidth: '600px', margin: '30px auto' }}>
         <input
           type="text"
@@ -311,7 +310,7 @@ const App = () => {
         </div>
       )}
 
-      {/* Offers section - unchanged */}
+      {/* Offers section */}
       {selectedCard && !noOffers && (
         <div className="offers-section" style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
           {selectedUpdatedCardOffers.length > 0 && (
@@ -342,6 +341,24 @@ const App = () => {
               <h2>EaseMyTrip Offers</h2>
               <div className="offer-grid">
                 {selectedEaseOffers.map((offer, index) => (
+                  <div key={index} className="offer-card">
+                    <img src={offer.Image} alt={offer.Title} />
+                    <div className="offer-info">
+                      <h3>{offer.Title}</h3>
+                      <p>{offer.Offer}</p>
+                      <button onClick={() => window.open(offer.Link, "_blank")}>View Details</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {selectedMakeOffers.length > 0 && (
+            <div className="offer-group">
+              <h2>MakeMyTrip Offers</h2>
+              <div className="offer-grid">
+                {selectedMakeOffers.map((offer, index) => (
                   <div key={index} className="offer-card">
                     <img src={offer.Image} alt={offer.Title} />
                     <div className="offer-info">
@@ -428,114 +445,8 @@ const App = () => {
           )}
         </div>
       )}
-
-      {/* FAQ section with 3 columns */}
-      <div style={{
-        maxWidth: '1200px',
-        margin: '50px auto',
-        padding: '20px'
-      }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '30px' }}>Frequently Asked Questions</h2>
-        
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '20px',
-          justifyContent: 'space-between'
-        }}>
-          {/* Column 1 */}
-          <div style={{
-            flex: '1',
-            minWidth: '300px',
-            padding: '20px',
-            borderRadius: '5px',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-          }}>
-            <h3 style={{ color: '#333', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
-              How do I use these hotel offers?
-            </h3>
-            <p style={{ lineHeight: '1.6', color: '#666' }}>
-              Search for your credit or debit card to see available hotel offers. When you find an offer you want to use, 
-              click "View Details" to be redirected to the booking website. Make sure to use the same card during checkout 
-              to avail the discount or cashback.
-            </p>
-          </div>
-          
-          {/* Column 2 */}
-          <div style={{
-            flex: '1',
-            minWidth: '300px',
-            padding: '20px',
-            borderRadius: '5px',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-          }}>
-            <h3 style={{ color: '#333', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
-              Are these offers valid for international hotels?
-            </h3>
-            <p style={{ lineHeight: '1.6', color: '#666' }}>
-              Most offers are valid for both domestic and international hotels, but some may have restrictions. 
-              Please check the terms and conditions of each offer before booking. The offer details will specify 
-              if there are any limitations on hotel locations or chains.
-            </p>
-          </div>
-          
-          {/* Column 3 */}
-          <div style={{
-            flex: '1',
-            minWidth: '300px',
-            padding: '20px',
-            borderRadius: '5px',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-          }}>
-            <h3 style={{ color: '#333', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
-              How often are new hotel offers added?
-            </h3>
-            <p style={{ lineHeight: '1.6', color: '#666' }}>
-              We update our database regularly as new offers become available. Hotel offers often change seasonally, 
-              especially around holidays and peak travel times. We recommend checking back frequently before 
-              booking your stay to ensure you get the best available deal.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
-};
-
-// Styles unchanged from original
-const styles = {
-  navbar: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "10px 20px",
-    backgroundColor: "#CDD1C1",
-  },
-  logoContainer: {
-    display: "flex",
-    alignItems: "center",
-  },
-  logo: {
-    width: "100px",
-    height: "100px",
-    marginRight: "20px",
-  },
-  linksContainer: {
-    display: "flex",
-    gap: "35px",
-    flexWrap: "wrap",
-    marginLeft: "40px",
-  },
-  link: {
-    textDecoration: "none",
-    color: "black",
-    fontSize: "18px",
-    fontFamily: "Arial, sans-serif",
-    transition: "color 0.3s ease",
-  },
-  mobileMenuOpen: {
-    display: "block",
-  },
 };
 
 export default App;
