@@ -193,12 +193,6 @@ useEffect(() => {
 
   return (
     <div className="App" style={{ fontFamily: "'Libre Baskerville', serif" }}>
-<<<<<<< HEAD
-=======
-
-   
-
->>>>>>> 7ce4f8c9763781babca553ec19da168a960799b7
       {/* Title in white container box */}
       <div style={{
         backgroundColor: 'white',
@@ -451,11 +445,6 @@ useEffect(() => {
           )}
         </div>
       )}
-<<<<<<< HEAD
-=======
-
- 
->>>>>>> 7ce4f8c9763781babca553ec19da168a960799b7
     </div>
   );
 };
