@@ -194,7 +194,7 @@ useEffect(() => {
   return (
     <div className="App" style={{ fontFamily: "'Libre Baskerville', serif" }}>
       {/* Title in white container box */}
-      <div style={{
+      <div className="title" style={{
         backgroundColor: 'white',
         padding: '20px',
         margin: '20px auto',
@@ -211,13 +211,13 @@ useEffect(() => {
         flexWrap: 'wrap',
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '20px'
+       
       }}>
         {/* First section with title and paragraph */}
         <div style={{
           flex: '1',
           minWidth: '300px',
-          padding: '20px'
+          
         }}>
           <h2 style={{ color: '#333' }}>Find the Best Hotel Offers</h2>
           <p style={{ lineHeight: '1.6', color: '#666' }}>
@@ -250,7 +250,7 @@ useEffect(() => {
       </div>
 
       {/* Dropdown section */}
-      <div className="dropdown-container" style={{ maxWidth: '600px', margin: '30px auto' }}>
+      <div className="dropdown-container" style={{ maxWidth: '600px'}}>
         <input
           type="text"
           value={query}
@@ -259,7 +259,6 @@ useEffect(() => {
           className="dropdown-input"
           style={{
             width: "100%",
-            padding: "12px",
             fontSize: "16px",
             border: "1px solid #ccc",
             borderRadius: "5px",
@@ -268,7 +267,6 @@ useEffect(() => {
         {filteredCards.length > 0 && (
           <ul className="dropdown-list" style={{
             listStyleType: "none",
-            padding: "10px",
             margin: 0,
             width: "100%",
             maxHeight: "200px",
@@ -281,7 +279,7 @@ useEffect(() => {
           }}>
             {filteredCards.map((item, index) =>
               item.type === "heading" ? (
-                <li key={index} style={{ padding: "10px", fontWeight: "bold" }}>
+                <li key={index} style={{fontWeight: "bold" }}>
                   {item.label}
                 </li>
               ) : (
