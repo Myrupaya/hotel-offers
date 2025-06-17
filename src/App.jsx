@@ -193,61 +193,6 @@ useEffect(() => {
 
   return (
     <div className="App" style={{ fontFamily: "'Libre Baskerville', serif" }}>
-      {/* Title in white container box */}
-      <div className="title" style={{
-        backgroundColor: 'white',
-        padding: '20px',
-        margin: '20px auto',
-        maxWidth: '1200px',
-        borderRadius: '5px',
-        boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-      }}>
-        <h1 style={{ color: 'black', textAlign: 'center', margin: 0 }}>Hotel Offers</h1>
-      </div>
-
-      {/* 50-50 split row */}
-      <div style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        maxWidth: '1200px',
-        margin: '0 auto',
-       
-      }}>
-        {/* First section with title and paragraph */}
-        <div style={{
-          flex: '1',
-          minWidth: '300px',
-          
-        }}>
-          <h2 style={{ color: '#333' }}>Find the Best Hotel Offers</h2>
-          <p style={{ lineHeight: '1.6', color: '#666' }}>
-            Discover exclusive discounts and cashback offers on hotel bookings when you use your credit or debit card. 
-            Our platform aggregates the best hotel offers from multiple travel portals to help you save money on your 
-            next stay. Simply search for your card to see available offers.
-          </p>
-        </div>
-        
-        {/* Second section with image */}
-        <div style={{
-          flex: '1',
-          minWidth: '300px',
-          padding: '20px',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-          <img 
-            src="" 
-            alt="Hotel offers" 
-            style={{ 
-              maxWidth: '100%', 
-              height: 'auto',
-              borderRadius: '5px',
-              boxShadow: '0 3px 10px rgba(0,0,0,0.2)'
-            }} 
-          />
-        </div>
-      </div>
 
       {/* Dropdown section */}
       <div className="dropdown-container" style={{ maxWidth: '600px'}}>
