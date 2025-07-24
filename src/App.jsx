@@ -12,6 +12,11 @@ const normalizeCardName = (name) => {
     .replace(/\s+/g, ' ');
 };
 
+const splitCouponCodes = (codeStr) => {
+  if (!codeStr) return [];
+  return codeStr.split(/\s*\|\s*|\s*,\s*/).filter(code => code.trim() !== '');
+};
+
 // Helper to extract base card name (remove network variant)
 const getBaseCardName = (name) => {
   if (!name) return '';
@@ -93,6 +98,7 @@ const App = () => {
   const [typingTimeout, setTypingTimeout] = useState(null);
   const [allCards, setAllCards] = useState([]);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   
   // Function to copy coupon code
@@ -113,6 +119,20 @@ const handleScrollDown = () => {
     behavior: "smooth"
   });
 };
+
+useEffect(() => {
+  const checkIsMobile = () => {
+    setIsMobile(window.innerWidth <= 768);
+  };
+   // Initial check
+  checkIsMobile();
+  
+  // Add resize listener
+  window.addEventListener('resize', checkIsMobile);
+  
+  // Cleanup
+  return () => window.removeEventListener('resize', checkIsMobile);
+}, []);
 
   // Function to handle input change in the search box
   const handleInputChange = (e) => {
@@ -369,13 +389,13 @@ const ClearTripOffers = ({ offers }) => (
                 </p>
               )}
               <div className="coupon-code">
-                {offer["Coupon Code"] && (
-                  <>
-                    <span>Code: {offer["Coupon Code"]}</span>
-                    <button className="copy-icon" onClick={() => copyToClipboard(offer["Coupon Code"])}>📋</button>
-                  </>
-                )}
-              </div>
+  {splitCouponCodes(offer["Coupon Code"]).map((code, idx) => (
+    <div key={idx} className="coupon-code-item">
+      <span>Code: {code}</span>
+      <button className="copy-icon" onClick={() => copyToClipboard(code)}>📋</button>
+    </div>
+  ))}
+</div>
               <button className="btn" onClick={() => window.open(offer["Offer Link"], "_blank")}>View Offer</button>
             </div>
           </div>
@@ -404,14 +424,14 @@ const EaseMyTripOffers = ({ offers }) => (
                   <strong>Note:</strong> Applicable only on <em>{variant}</em> variant
                 </p>
               )}
-              <div className="coupon-code">
-                {offer["Promo Code"] && (
-                  <>
-                    <span>Code: {offer["Promo Code"]}</span>
-                    <button className="copy-icon" onClick={() => copyToClipboard(offer["Promo Code"])}>📋</button>
-                  </>
-                )}
-              </div>
+        <div className="coupon-code">
+  {splitCouponCodes(offer["Promo Code"]).map((code, idx) => (
+    <div key={idx} className="coupon-code-item">
+      <span>Code: {code}</span>
+      <button className="copy-icon" onClick={() => copyToClipboard(code)}>📋</button>
+    </div>
+  ))}
+</div>
               <button className="btn" onClick={() => window.open(offer["Offer Link"], "_blank")}>View Details</button>
             </div>
           </div>
@@ -498,14 +518,14 @@ const YatraOffers = ({ offers }) => (
                   <strong>Note:</strong> This benefit is applicable only on {variant} variant
                 </p>
               )}
-              <div className="coupon-code">
-                {offer["Coupon Code"] && (
-                  <>
-                    <span>Code: {offer["Coupon Code"]}</span>
-                    <button className="copy-icon" onClick={() => copyToClipboard(offer["Coupon Code"])}>📋</button>
-                  </>
-                )}
-              </div>
+             <div className="coupon-code">
+  {splitCouponCodes(offer["Coupon Code"]).map((code, idx) => (
+    <div key={idx} className="coupon-code-item">
+      <span>Code: {code}</span>
+      <button className="copy-icon" onClick={() => copyToClipboard(code)}>📋</button>
+    </div>
+  ))}
+</div>
               <button className="btn" onClick={() => window.open(offer["Offer Link"], "_blank")}>View Offer</button>
             </div>
           </div>
@@ -534,14 +554,14 @@ const IxigoOffers = ({ offers }) => (
                   <strong>Note:</strong> This benefit is applicable only on {variant} variant
                 </p>
               )}
-              <div className="coupon-code">
-                {offer["Promo Code"] && (
-                  <>
-                    <span>Code: {offer["Promo Code"]}</span>
-                    <button className="copy-icon" onClick={() => copyToClipboard(offer["Promo Code"])}>📋</button>
-                  </>
-                )}
-              </div>
+          <div className="coupon-code">
+  {splitCouponCodes(offer["Promo Code"]).map((code, idx) => (
+    <div key={idx} className="coupon-code-item">
+      <span>Code: {code}</span>
+      <button className="copy-icon" onClick={() => copyToClipboard(code)}>📋</button>
+    </div>
+  ))}
+</div>
               <button className="btn" onClick={() => window.open(offer["Offer Link"], "_blank")}>View Details</button>
             </div>
           </div>
@@ -758,27 +778,33 @@ const UpdatedCreditCardOffers = ({ offers }) => (
         <p className="bottom-disclaimer"> <h3>Disclaimer</h3> All offers, coupons, and discounts listed on our platform are provided for informational purposes only. We do not guarantee the accuracy, availability, or validity of any offer. Users are advised to verify the terms and conditions with the respective merchants before making any purchase. We are not responsible for any discrepancies, expired offers, or losses arising from the use of these coupons.</p>
      )}
 {showScrollButton && (
-        <button 
-          onClick={handleScrollDown}
-          style={{
-            position: 'fixed',
-            marginTop:'20px',
-            right: '20px',
-            bottom: '450px',
-            padding: '10px 15px',
-            backgroundColor: '#1e7145',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            zIndex: 1000,
-            boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-          }}
-        >
-          Scroll Down
-        </button>
-      )}
+  <button 
+    onClick={handleScrollDown}
+    style={{
+      position: 'fixed',
+      right: '20px',
+      bottom: isMobile ? '20px' : '150px',
+      padding: isMobile ? '12px 15px' : '10px 20px',
+      backgroundColor: '#1e7145',
+      color: 'white',
+      border: 'none',
+      borderRadius: isMobile ? '50%' : '8px', // ← rectangular for desktop
+      cursor: 'pointer',
+      fontSize: '18px',
+      zIndex: 1000,
+      boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+      width: isMobile ? '50px' : '140px',
+      height: isMobile ? '50px' : '50px',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom:'450px',
+    }}
+  >
+    {isMobile ? '↓' : 'Scroll Down'}
+  </button>
+)}
+
     </div>
   );
 };
