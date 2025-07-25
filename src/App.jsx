@@ -775,7 +775,7 @@ const UpdatedCreditCardOffers = ({ offers }) => (
         </div>
         
       )}
- {selectedCard && !hasAnyOffers() && !showNoCardMessage ? null : (
+
         <div className="bottom-disclaimer">
         <h3>Disclaimer</h3>
         <p>
@@ -785,7 +785,7 @@ const UpdatedCreditCardOffers = ({ offers }) => (
           for any discrepancies, expired offers, or losses arising from the use of these coupons.
         </p>
       </div>
-     )}
+     
 {showScrollButton && (
   <button 
     onClick={handleScrollDown}
