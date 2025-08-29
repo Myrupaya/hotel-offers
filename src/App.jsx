@@ -389,14 +389,14 @@ const ClearTripOffers = ({ offers }) => (
                   <strong>Note:</strong> This benefit is applicable only on <em>{variant}</em> variant
                 </p>
               )}
-              <div className="coupon-code">
+              {/* <div className="coupon-code">
   {splitCouponCodes(offer["Coupon Code"]).map((code, idx) => (
     <div key={idx} className="coupon-code-item">
       <span>Code: {code}</span>
       <button className="copy-icon" onClick={() => copyToClipboard(code)}>📋</button>
     </div>
   ))}
-</div>
+</div> */}
               <button className="btn" onClick={() => window.open(offer["Offer Link"], "_blank")}>View Offer</button>
             </div>
           </div>
@@ -419,20 +419,20 @@ const EaseMyTripOffers = ({ offers }) => (
             <div className="offer-info">
               <h3>{offer["Offer Title"]}</h3>
               <p>{offer["Offer Description"]}</p>
-              <p><strong>Booking Period:</strong> {offer["Booking Period"]}</p>
+              {/* <p><strong>Booking Period:</strong> {offer["Booking Period"]}</p> */}
               {variant && (
                 <p className="network-note">
                   <strong>Note:</strong> Applicable only on <em>{variant}</em> variant
                 </p>
               )}
-        <div className="coupon-code">
+        {/* <div className="coupon-code">
   {splitCouponCodes(offer["Promo Code"]).map((code, idx) => (
     <div key={idx} className="coupon-code-item">
       <span>Code: {code}</span>
       <button className="copy-icon" onClick={() => copyToClipboard(code)}>📋</button>
     </div>
   ))}
-</div>
+</div> */}
               <button className="btn" onClick={() => window.open(offer["Offer Link"], "_blank")}>View Details</button>
             </div>
           </div>
@@ -456,7 +456,7 @@ const MakeMyTripOffers = ({ offers }) => (
             <div className="offer-info">
               <h3>{offer["Offer Title"]}</h3>
               <p>{offer["Offer Description"]}</p>
-              <p><strong>Expires:</strong> {offer["Offer Expires"]}</p>
+              {/* <p><strong>Expires:</strong> {offer["Offer Expires"]}</p> */}
               {variant && (
                 <p className="network-note">
                   <strong>Note:</strong> This benefit is applicable only on {variant} variant
@@ -485,7 +485,7 @@ const GoibiboOffers = ({ offers }) => (
             <div className="offer-info">
               <h3>{offer["Offer Title"]}</h3>
               <p>{offer["Offer Description"]}</p>
-              <p><strong>Validity:</strong> {offer["Offer Validity"]}</p>
+              {/* <p><strong>Validity:</strong> {offer["Offer Validity"]}</p> */}
                {variant && (
                 <p className="network-note">
                   <strong>Note:</strong> This benefit is applicable only on {variant} variant
@@ -513,20 +513,21 @@ const YatraOffers = ({ offers }) => (
             <img src={offer["Offer Image"]} alt={offer["Offer Title"]} />
             <div className="offer-info">
               <h3>{offer["Offer Title"]}</h3>
-              <p><strong>Validity:</strong> {offer.Validity}</p>
+              <p>{offer["Offer Description"]}</p>
+              {/* <p><strong>Validity:</strong> {offer.Validity}</p> */}
              {variant && (
                 <p className="network-note">
                   <strong>Note:</strong> This benefit is applicable only on {variant} variant
                 </p>
               )}
-             <div className="coupon-code">
+             {/* <div className="coupon-code">
   {splitCouponCodes(offer["Coupon Code"]).map((code, idx) => (
     <div key={idx} className="coupon-code-item">
       <span>Code: {code}</span>
       <button className="copy-icon" onClick={() => copyToClipboard(code)}>📋</button>
     </div>
   ))}
-</div>
+</div> */}
               <button className="btn" onClick={() => window.open(offer["Offer Link"], "_blank")}>View Offer</button>
             </div>
           </div>
@@ -549,20 +550,21 @@ const IxigoOffers = ({ offers }) => (
             <img src={offer["Offer Image"]} alt={offer["Offer Title"]} />
             <div className="offer-info">
               <h3>{offer["Offer Title"]}</h3>
-              <p><strong>Expiry:</strong> {offer["Offer Expiry Date"]}</p>
+              <p>{offer["Offer Description"]}</p>
+              {/* <p><strong>Expiry:</strong> {offer["Offer Expiry Date"]}</p> */}
                {variant && (
                 <p className="network-note">
                   <strong>Note:</strong> This benefit is applicable only on {variant} variant
                 </p>
               )}
-          <div className="coupon-code">
+          {/* <div className="coupon-code">
   {splitCouponCodes(offer["Promo Code"]).map((code, idx) => (
     <div key={idx} className="coupon-code-item">
       <span>Code: {code}</span>
       <button className="copy-icon" onClick={() => copyToClipboard(code)}>📋</button>
     </div>
   ))}
-</div>
+</div> */}
               <button className="btn" onClick={() => window.open(offer["Offer Link"], "_blank")}>View Details</button>
             </div>
           </div>
