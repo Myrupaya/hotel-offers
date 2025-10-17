@@ -8,7 +8,7 @@ const LIST_FIELDS = {
   credit: ["Eligible Credit Cards", "Eligible Cards"],
   debit: ["Eligible Debit Cards", "Applicable Debit Cards"],
   title: ["Offer Title", "Title"],
-  image: ["Image", "Credit Card Image", "Offer Image"],
+  image: ["Image", "Credit Card Image", "Offer Image", "image", "Image URL"],
   link: ["Link", "Offer Link"],
   desc: ["Description", "Details", "Offer Description", "Flight Benefit"],
   // Permanent (inbuilt) CSV fields
@@ -27,6 +27,53 @@ const VARIANT_NOTE_SITES = new Set([
   "Goibibo",
   "Permanent",
 ]);
+
+/** -------------------- IMAGE FALLBACKS -------------------- */
+/* Matches wrapper.site (lowercased) */
+const FALLBACK_IMAGE_BY_SITE = {
+  "easemytrip":
+    "https://www.traveltrendstoday.in/storage/posts/channels4-profile-12.jpg",
+  "goibibo":
+    "https://img-cdn.publive.online/fit-in/1200x675/filters:format(webp)/smstreet/media/media_files/oh1xyxLOe0PaiN1jF9uP.jpg",
+  "ixigo":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Ixigo_logo.svg/2560px-Ixigo_logo.svg.png",
+  "makemytrip":
+    "https://d1yjjnpx0p53s8.cloudfront.net/styles/logo-thumbnail/s3/112019/mmt_fullcolor.png?JgFR3clMwpXRH2xztnw10uhf0tUSghgS&itok=2eLs41rV",
+  "yatra":
+    "https://play-lh.googleusercontent.com/6ACvwZruB53DwP81U-vwvBob0rgMR1NxwyocN-g5Ey72k1HWbz9FmNuiMxPte4N8SQ",
+};
+
+function isUsableImage(val) {
+  if (!val) return false;
+  const s = String(val).trim();
+  if (!s) return false;
+  if (/^(na|n\/a|null|undefined|-|image unavailable)$/i.test(s)) return false;
+  return true;
+}
+
+/** Decide which image to show + whether it's a fallback (logo) */
+function resolveImage(siteKey, candidate) {
+  const key = String(siteKey || "").toLowerCase();
+  const fallback = FALLBACK_IMAGE_BY_SITE[key];
+  const usingFallback = !isUsableImage(candidate) && !!fallback;
+  return {
+    src: usingFallback ? fallback : candidate,
+    usingFallback,
+  };
+}
+
+/** If the image fails, switch to fallback and mark as fallback for CSS */
+function handleImgError(e, siteKey) {
+  const key = String(siteKey || "").toLowerCase();
+  const fallback = FALLBACK_IMAGE_BY_SITE[key];
+  const el = e.currentTarget;
+  if (fallback && el.src !== fallback) {
+    el.src = fallback;
+    el.classList.add("is-fallback");
+  } else {
+    el.style.display = "none"; // hide if even fallback fails
+  }
+}
 
 /** -------------------- HELPERS -------------------- */
 const toNorm = (s) =>
@@ -89,13 +136,13 @@ function splitList(val) {
     .filter(Boolean);
 }
 
-/** Strip trailing parentheses: "HDFC Regalia (Visa Signature)" -> "HDFC Regalia" */
+/** Strip trailing parentheses */
 function getBase(name) {
   if (!name) return "";
   return String(name).replace(/\s*\([^)]*\)\s*$/, "").trim();
 }
 
-/** Variant if present at end-in-parens: "… (Visa Signature)" -> "Visa Signature" */
+/** Variant if present at end-in-parens */
 function getVariant(name) {
   if (!name) return "";
   const m = String(name).match(/\(([^)]+)\)\s*$/);
@@ -116,12 +163,11 @@ function brandCanonicalize(text) {
   return s;
 }
 
-/** Levenshtein distance */
+/** Levenshtein distance + scoring */
 function lev(a, b) {
   a = toNorm(a);
   b = toNorm(b);
-  const n = a.length,
-    m = b.length;
+  const n = a.length, m = b.length;
   if (!n) return m;
   if (!m) return n;
   const d = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
@@ -130,16 +176,11 @@ function lev(a, b) {
   for (let i = 1; i <= n; i++) {
     for (let j = 1; j <= m; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      d[i][j] = Math.min(
-        d[i - 1][j] + 1,
-        d[i][j - 1] + 1,
-        d[i - 1][j - 1] + cost
-      );
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
     }
   }
   return d[n][m];
 }
-
 function scoreCandidate(q, cand) {
   const qs = toNorm(q);
   const cs = toNorm(cand);
@@ -192,7 +233,7 @@ function dedupWrappers(arr, seen) {
   return out;
 }
 
-/** ---- header/type detection for building marquee from OFFER CSVs (exclude allCards.csv) ---- */
+/** ---- marquee helpers ---- */
 const headerLooksDebit = (key) => {
   const k = String(key).toLowerCase();
   return /\bdebit\b/.test(k) && /\bcards?\b/.test(k);
@@ -245,7 +286,7 @@ const HotelOffers = () => {
   const [creditEntries, setCreditEntries] = useState([]);
   const [debitEntries, setDebitEntries] = useState([]);
 
-  // 🔹 marquee lists (from offer CSVs ONLY — NOT all_cards.csv)
+  // marquee lists (from offer CSVs ONLY)
   const [marqueeCC, setMarqueeCC] = useState([]);
   const [marqueeDC, setMarqueeDC] = useState([]);
 
@@ -256,7 +297,7 @@ const HotelOffers = () => {
   const [noMatches, setNoMatches] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // offers (only the CSVs you listed)
+  // offers
   const [easeOffers, setEaseOffers] = useState([]);
   const [yatraOffers, setYatraOffers] = useState([]);
   const [ixigoOffers, setIxigoOffers] = useState([]);
@@ -355,7 +396,7 @@ const HotelOffers = () => {
     loadOffers();
   }, []);
 
-  /** 🔹 Build marquee (CC/DC chips) from OFFER CSVs ONLY — exclude allCards.csv */
+  /** Build marquee (CC/DC chips) from OFFER CSVs ONLY — exclude allCards.csv */
   useEffect(() => {
     const ccMap = new Map(); // baseNorm -> display
     const dcMap = new Map();
@@ -431,7 +472,7 @@ const HotelOffers = () => {
       }
     };
 
-    // Harvest from hotel offer CSVs
+    // Harvest from CSVs
     harvestRows(easeOffers);
     harvestRows(yatraOffers);
     harvestRows(ixigoOffers);
@@ -460,7 +501,7 @@ const HotelOffers = () => {
     permanentOffers,
   ]);
 
-  /** 🔎 search box with debit-first ordering when query hints debit */
+  /** search box */
   const onChangeQuery = (e) => {
     const val = e.target.value;
     setQuery(val);
@@ -474,8 +515,7 @@ const HotelOffers = () => {
 
     const q = val.trim().toLowerCase();
 
-    // If input hints "debit", show Debit first then Credit
-    // Matches: "dc", "debit", "debit card", "debit cards" (substring, case-insensitive)
+    // Optional: prioritize debit results if input hints debit
     const debitHint =
       q.includes("debit") ||
       q.includes("debit card") ||
@@ -525,7 +565,7 @@ const HotelOffers = () => {
     setNoMatches(false);
   };
 
-  // 🔹 Click a chip → set the dropdown + selected entry
+  // Click a marquee chip → set the dropdown + selected entry
   const handleChipClick = (name, type) => {
     const display = brandCanonicalize(getBase(name));
     const baseNorm = toNorm(display);
@@ -543,9 +583,8 @@ const HotelOffers = () => {
       let list = [];
       if (type === "permanent") {
         const nm = firstField(o, LIST_FIELDS.permanentCCName);
-        if (nm) list = [nm]; // single card name
+        if (nm) list = [nm];
       } else if (type === "debit") {
-        // wider DC detection
         const dcExplicit =
           firstField(o, LIST_FIELDS.debit) ||
           firstFieldByContains(o, "eligible debit") ||
@@ -561,7 +600,6 @@ const HotelOffers = () => {
           if (mixed && typeHint === "debit") dc = splitList(mixed);
         }
         if (!dc.length) {
-          // final: scan all values for tokens containing 'debit'
           const tokens = Object.values(o || {})
             .filter((v) => typeof v === "string")
             .flatMap((v) => splitList(v))
@@ -596,7 +634,7 @@ const HotelOffers = () => {
     return out;
   }
 
-  // Collect then global-dedup (Permanent first, and only for credit)
+  // Collect then global-dedup
   const wPermanent = matchesFor(permanentOffers, "permanent", "Permanent");
   const wGoibibo = matchesFor(
     goibiboOffers,
@@ -645,7 +683,7 @@ const HotelOffers = () => {
   const OfferCard = ({ wrapper, isPermanent = false }) => {
     const o = wrapper.offer;
     const title = firstField(o, LIST_FIELDS.title) || o.Website || "Offer";
-    const image = firstField(o, LIST_FIELDS.image);
+    const candidateImage = firstField(o, LIST_FIELDS.image); // may be missing/invalid
     const desc = isPermanent
       ? firstField(o, LIST_FIELDS.permanentBenefit)
       : firstField(o, LIST_FIELDS.desc);
@@ -656,9 +694,20 @@ const HotelOffers = () => {
       wrapper.variantText &&
       wrapper.variantText.trim().length > 0;
 
+    // Resolve image (real poster or site-logo fallback)
+    const siteKey = String(wrapper.site || "").toLowerCase();
+    const { src: imgSrc, usingFallback } = resolveImage(siteKey, candidateImage);
+
     return (
       <div className="offer-card">
-        {image && <img src={image} alt={title} />}
+        {imgSrc && (
+          <img
+            className={`offer-img ${usingFallback ? "is-fallback" : ""}`}
+            src={imgSrc}
+            alt={title}
+            onError={(e) => handleImgError(e, siteKey)}
+          />
+        )}
         <div className="offer-info">
           <h3 className="offer-title">{title}</h3>
 
@@ -689,7 +738,7 @@ const HotelOffers = () => {
 
   return (
     <div className="App" style={{ fontFamily: "'Libre Baskerville', serif" }}>
-      {/* 🔹 Cards-with-offers strip (ONLY from offer CSVs; excludes allCards.csv) */}
+      {/* Cards-with-offers strip (ONLY from offer CSVs) */}
       {(marqueeCC.length > 0 || marqueeDC.length > 0) && (
         <div
           style={{
