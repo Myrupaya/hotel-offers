@@ -32,7 +32,7 @@ const VARIANT_NOTE_SITES = new Set([
 /* Matches wrapper.site (lowercased) */
 const FALLBACK_IMAGE_BY_SITE = {
   "easemytrip":
-    "https://www.traveltrendstoday.in/storage/posts/channels4-profile-12.jpg",
+    "https://tse1.mm.bing.net/th/id/OIP.rKHSn2dsUkaNPS79jlkhuAHaE8?pid=Api&P=0&h=180",
   "goibibo":
     "https://img-cdn.publive.online/fit-in/1200x675/filters:format(webp)/smstreet/media/media_files/oh1xyxLOe0PaiN1jF9uP.jpg",
   "ixigo":
@@ -374,7 +374,7 @@ const HotelOffers = () => {
     async function loadOffers() {
       try {
         const files = [
-          { name: "EaseMyTrip.csv", setter: setEaseOffers },
+          { name: "ClearTrip.csv", setter: setEaseOffers },
           { name: "Yatra.csv", setter: setYatraOffers },
           { name: "Ixigo.csv", setter: setIxigoOffers },
           { name: "MakeMyTrip.csv", setter: setMakeMyTripOffers },
@@ -959,7 +959,7 @@ const HotelOffers = () => {
 
           {!!dEase.length && (
             <div className="offer-group">
-              <h2 style={{ textAlign: "center" }}>Offers on EaseMyTrip</h2>
+              <h2 style={{ textAlign: "center" }}>Offers on ClearTrip</h2>
               <div className="offer-grid">
                 {dEase.map((w, i) => (
                   <OfferCard key={`emt-${i}`} wrapper={w} />
