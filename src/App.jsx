@@ -31,15 +31,15 @@ const VARIANT_NOTE_SITES = new Set([
 /** -------------------- IMAGE FALLBACKS -------------------- */
 /* Matches wrapper.site (lowercased) */
 const FALLBACK_IMAGE_BY_SITE = {
-  "easemytrip":
+  easemytrip:
     "https://tse1.mm.bing.net/th/id/OIP.rKHSn2dsUkaNPS79jlkhuAHaE8?pid=Api&P=0&h=180",
-  "goibibo":
+  goibibo:
     "https://img-cdn.publive.online/fit-in/1200x675/filters:format(webp)/smstreet/media/media_files/oh1xyxLOe0PaiN1jF9uP.jpg",
-  "ixigo":
+  ixigo:
     "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Ixigo_logo.svg/2560px-Ixigo_logo.svg.png",
-  "makemytrip":
+  makemytrip:
     "https://d1yjjnpx0p53s8.cloudfront.net/styles/logo-thumbnail/s3/112019/mmt_fullcolor.png?JgFR3clMwpXRH2xztnw10uhf0tUSghgS&itok=2eLs41rV",
-  "yatra":
+  yatra:
     "https://play-lh.googleusercontent.com/6ACvwZruB53DwP81U-vwvBob0rgMR1NxwyocN-g5Ey72k1HWbz9FmNuiMxPte4N8SQ",
 };
 
@@ -196,6 +196,27 @@ function scoreCandidate(q, cand) {
   ).length;
   const sim = 1 - lev(qs, cs) / Math.max(qs.length, cs.length);
   return (matchingWords / Math.max(1, qWords.length)) * 0.7 + sim * 0.3;
+}
+
+/** 🔹 Generic fuzzy name matcher: handles typos like 'selct', 'hdfc reglia', etc. */
+function isFuzzyNameMatch(query, label) {
+  const q = toNorm(query);
+  const l = toNorm(label);
+  if (!q || !l) return false;
+
+  if (l.includes(q)) return true; // normal substring
+
+  const wholeDist = lev(q, l);
+  const wholeSim = 1 - wholeDist / Math.max(q.length, l.length);
+  if (wholeSim >= 0.6) return true;
+
+  const words = l.split(" ").filter(Boolean);
+  for (const w of words) {
+    const d = lev(q, w);
+    const sim = 1 - d / Math.max(q.length, w.length);
+    if (sim >= 0.6) return true;
+  }
+  return false;
 }
 
 /** Dropdown entry builder */
@@ -502,7 +523,7 @@ const HotelOffers = () => {
     permanentOffers,
   ]);
 
-  /** 🔹 UPDATED search box: "select credit card" boost + debit-first when query hints DC */
+  /** 🔹 UPDATED search box: generic fuzzy for any mistyped card name */
   const onChangeQuery = (e) => {
     const val = e.target.value;
     setQuery(val);
@@ -520,11 +541,18 @@ const HotelOffers = () => {
     const scored = (arr) =>
       arr
         .map((it) => {
-          const s = scoreCandidate(trimmed, it.display);
+          const baseScore = scoreCandidate(trimmed, it.display);
           const inc = it.display.toLowerCase().includes(qLower);
-          return { it, s, inc };
+          const fuzzy = isFuzzyNameMatch(trimmed, it.display);
+
+          // Boost exact substring + fuzzy matches so they float to the top
+          let s = baseScore;
+          if (inc) s += 2.0;
+          if (fuzzy) s += 1.5;
+
+          return { it, s, inc, fuzzy };
         })
-        .filter(({ s, inc }) => inc || s > 0.3)
+        .filter(({ s, inc, fuzzy }) => inc || fuzzy || s > 0.3)
         .sort((a, b) => b.s - a.s || a.it.display.localeCompare(b.it.display))
         .slice(0, MAX_SUGGESTIONS)
         .map(({ it }) => it);
@@ -539,7 +567,7 @@ const HotelOffers = () => {
       return;
     }
 
-    /** --- SPECIAL CASE 1: boost "select credit card" cards to the top --- */
+    /** --- SPECIAL CASE 1: boost "select credit card" cards to the top (for correct spelling) --- */
     const PRIORITY_SELECT = "select credit card";
     if (qLower.includes(PRIORITY_SELECT)) {
       const reorderBySelect = (arr) => {
