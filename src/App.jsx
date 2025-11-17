@@ -167,7 +167,8 @@ function brandCanonicalize(text) {
 function lev(a, b) {
   a = toNorm(a);
   b = toNorm(b);
-  const n = a.length, m = b.length;
+  const n = a.length,
+    m = b.length;
   if (!n) return m;
   if (!m) return n;
   const d = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
@@ -501,32 +502,26 @@ const HotelOffers = () => {
     permanentOffers,
   ]);
 
-  /** search box */
+  /** 🔹 UPDATED search box: "select credit card" boost + debit-first when query hints DC */
   const onChangeQuery = (e) => {
     const val = e.target.value;
     setQuery(val);
 
-    if (!val.trim()) {
+    const trimmed = val.trim();
+    if (!trimmed) {
       setFilteredCards([]);
       setSelected(null);
       setNoMatches(false);
       return;
     }
 
-    const q = val.trim().toLowerCase();
-
-    // Optional: prioritize debit results if input hints debit
-    const debitHint =
-      q.includes("debit") ||
-      q.includes("debit card") ||
-      q.includes("debit cards") ||
-      q.includes("dc");
+    const qLower = trimmed.toLowerCase();
 
     const scored = (arr) =>
       arr
         .map((it) => {
-          const s = scoreCandidate(val, it.display);
-          const inc = it.display.toLowerCase().includes(q);
+          const s = scoreCandidate(trimmed, it.display);
+          const inc = it.display.toLowerCase().includes(qLower);
           return { it, s, inc };
         })
         .filter(({ s, inc }) => inc || s > 0.3)
@@ -534,8 +529,8 @@ const HotelOffers = () => {
         .slice(0, MAX_SUGGESTIONS)
         .map(({ it }) => it);
 
-    const cc = scored(creditEntries);
-    const dc = scored(debitEntries);
+    let cc = scored(creditEntries);
+    let dc = scored(debitEntries);
 
     if (!cc.length && !dc.length) {
       setNoMatches(true);
@@ -544,18 +539,52 @@ const HotelOffers = () => {
       return;
     }
 
-    const firstList = debitHint ? dc : cc;
-    const firstLabel = debitHint ? "Debit Cards" : "Credit Cards";
-    const secondList = debitHint ? cc : dc;
-    const secondLabel = debitHint ? "Credit Cards" : "Debit Cards";
+    /** --- SPECIAL CASE 1: boost "select credit card" cards to the top --- */
+    const PRIORITY_SELECT = "select credit card";
+    if (qLower.includes(PRIORITY_SELECT)) {
+      const reorderBySelect = (arr) => {
+        const exact = [];
+        const contains = [];
+        const rest = [];
+        arr.forEach((item) => {
+          const label = item.display.toLowerCase();
+          if (label === PRIORITY_SELECT) exact.push(item);
+          else if (label.includes(PRIORITY_SELECT)) contains.push(item);
+          else rest.push(item);
+        });
+        return [...exact, ...contains, ...rest];
+      };
+      cc = reorderBySelect(cc);
+      dc = reorderBySelect(dc);
+    }
+
+    /** --- SPECIAL CASE 2: if query hints debit/DC → show Debit section first --- */
+    const mentionsDebit =
+      qLower.includes("debit card") ||
+      qLower.includes("debit cards") ||
+      qLower.includes("debit") ||
+      qLower === "dc" ||
+      qLower.startsWith("dc ") ||
+      qLower.endsWith(" dc") ||
+      qLower.includes(" dc ");
 
     setNoMatches(false);
-    setFilteredCards([
-      ...(firstList.length ? [{ type: "heading", label: firstLabel }] : []),
-      ...firstList,
-      ...(secondList.length ? [{ type: "heading", label: secondLabel }] : []),
-      ...secondList,
-    ]);
+
+    if (mentionsDebit) {
+      setFilteredCards([
+        ...(dc.length ? [{ type: "heading", label: "Debit Cards" }] : []),
+        ...dc,
+        ...(cc.length ? [{ type: "heading", label: "Credit Cards" }] : []),
+        ...cc,
+      ]);
+    } else {
+      setFilteredCards([
+        ...(cc.length ? [{ type: "heading", label: "Credit Cards" }] : []),
+        ...cc,
+        ...(dc.length ? [{ type: "heading", label: "Debit Cards" }] : []),
+        ...dc,
+      ]);
+    }
   };
 
   const onPick = (entry) => {
