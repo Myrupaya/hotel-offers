@@ -326,6 +326,7 @@ const HotelOffers = () => {
   const [makeMyTripOffers, setMakeMyTripOffers] = useState([]);
   const [goibiboOffers, setGoibiboOffers] = useState([]);
   const [permanentOffers, setPermanentOffers] = useState([]);
+  const [easeMyTripOffers, setEaseMyTripOffers] = useState([]); // ✅ NEW: EaseMyTrip.csv
 
   // responsive
   useEffect(() => {
@@ -397,6 +398,7 @@ const HotelOffers = () => {
       try {
         const files = [
           { name: "ClearTrip.csv", setter: setEaseOffers },
+          { name: "EaseMyTrip.csv", setter: setEaseMyTripOffers }, // ✅ NEW
           { name: "Yatra.csv", setter: setYatraOffers },
           { name: "Ixigo.csv", setter: setIxigoOffers },
           { name: "MakeMyTrip.csv", setter: setMakeMyTripOffers },
@@ -496,6 +498,7 @@ const HotelOffers = () => {
 
     // Harvest from CSVs
     harvestRows(easeOffers);
+    harvestRows(easeMyTripOffers); // ✅ NEW: include EaseMyTrip.csv in marquee
     harvestRows(yatraOffers);
     harvestRows(ixigoOffers);
     harvestRows(makeMyTripOffers);
@@ -516,6 +519,7 @@ const HotelOffers = () => {
     setMarqueeDC(Array.from(dcMap.values()).sort((a, b) => a.localeCompare(b)));
   }, [
     easeOffers,
+    easeMyTripOffers, // ✅ NEW dependency
     yatraOffers,
     ixigoOffers,
     makeMyTripOffers,
@@ -703,6 +707,11 @@ const HotelOffers = () => {
     selected?.type === "debit" ? "debit" : "credit",
     "EaseMyTrip"
   );
+  const wEaseMyTrip = matchesFor(
+    easeMyTripOffers,
+    selected?.type === "debit" ? "debit" : "credit",
+    "EaseMyTrip"
+  ); // ✅ NEW
   const wYatra = matchesFor(
     yatraOffers,
     selected?.type === "debit" ? "debit" : "credit",
@@ -723,6 +732,7 @@ const HotelOffers = () => {
   const dPermanent = selected?.type === "credit" ? dedupWrappers(wPermanent, seen) : [];
   const dGoibibo = dedupWrappers(wGoibibo, seen);
   const dEase = dedupWrappers(wEase, seen);
+  const dEaseMyTrip = dedupWrappers(wEaseMyTrip, seen); // ✅ NEW
   const dYatra = dedupWrappers(wYatra, seen);
   const dIxigo = dedupWrappers(wIxigo, seen);
   const dMMT = dedupWrappers(wMMT, seen);
@@ -731,6 +741,7 @@ const HotelOffers = () => {
     dPermanent.length ||
       dGoibibo.length ||
       dEase.length ||
+      dEaseMyTrip.length || // ✅ NEW
       dYatra.length ||
       dIxigo.length ||
       dMMT.length
@@ -1020,6 +1031,17 @@ const HotelOffers = () => {
               <div className="offer-grid">
                 {dEase.map((w, i) => (
                   <OfferCard key={`emt-${i}`} wrapper={w} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!!dEaseMyTrip.length && (
+            <div className="offer-group">
+              <h2 style={{ textAlign: "center" }}>Offers on EaseMyTrip</h2>
+              <div className="offer-grid">
+                {dEaseMyTrip.map((w, i) => (
+                  <OfferCard key={`emt2-${i}`} wrapper={w} />
                 ))}
               </div>
             </div>
