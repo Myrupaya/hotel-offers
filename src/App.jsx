@@ -7,6 +7,10 @@ import "./App.css";
 const LIST_FIELDS = {
   credit: ["Eligible Credit Cards", "Eligible Cards"],
   debit: ["Eligible Debit Cards", "Applicable Debit Cards"],
+  // ✅ NEW
+  upi: ["UPI", "Upi"],
+  netbanking: ["NetBanking", "Net Banking", "netbanking", "Internet Banking"],
+
   title: ["Offer Title", "Title", "Offer"],
   image: ["Image", "Credit Card Image", "Offer Image", "image", "Image URL"],
   link: ["Link", "Offer Link"],
@@ -268,6 +272,14 @@ const headerLooksEligibleCards = (key) => {
   const k = String(key).toLowerCase();
   return /\beligible\b/.test(k) && /\bcards?\b/.test(k);
 };
+
+// ✅ NEW
+const headerLooksUPI = (key) => /\bupi\b/i.test(String(key || ""));
+const headerLooksNetBanking = (key) => {
+  const k = String(key || "").toLowerCase();
+  return /\bnet\s*banking\b/.test(k) || /\bnetbanking\b/.test(k) || /\binternet\s*banking\b/.test(k);
+};
+
 function getRowTypeHint(row) {
   for (const k of Object.keys(row || {})) {
     const lk = k.toLowerCase();
@@ -286,6 +298,13 @@ function getRowTypeHint(row) {
 }
 const valueLooksDebit = (s) => /\bdebit\b/i.test(String(s || ""));
 const valueLooksCredit = (s) => /\bcredit\b/i.test(String(s || ""));
+
+// ✅ NEW
+const valueLooksUPI = (s) => /\bupi\b/i.test(String(s || ""));
+const valueLooksNetBanking = (s) =>
+  /\bnet\s*banking\b/i.test(String(s || "")) ||
+  /\bnetbanking\b/i.test(String(s || "")) ||
+  /\binternet\s*banking\b/i.test(String(s || ""));
 
 /** Disclaimer */
 const Disclaimer = () => (
@@ -308,9 +327,17 @@ const HotelOffers = () => {
   const [creditEntries, setCreditEntries] = useState([]);
   const [debitEntries, setDebitEntries] = useState([]);
 
+  // ✅ NEW: dropdown data for payment methods (from CSVs)
+  const [upiEntries, setUpiEntries] = useState([]);
+  const [netbankingEntries, setNetbankingEntries] = useState([]);
+
   // marquee lists (from offer CSVs ONLY)
   const [marqueeCC, setMarqueeCC] = useState([]);
   const [marqueeDC, setMarqueeDC] = useState([]);
+
+  // ✅ NEW
+  const [marqueeUPI, setMarqueeUPI] = useState([]);
+  const [marqueeNB, setMarqueeNB] = useState([]);
 
   // ui state
   const [filteredCards, setFilteredCards] = useState([]);
@@ -347,6 +374,10 @@ const HotelOffers = () => {
         const creditMap = new Map();
         const debitMap = new Map();
 
+        // ✅ NEW
+        const upiMap = new Map();
+        const nbMap = new Map();
+
         for (const row of rows) {
           const ccList = splitList(firstField(row, LIST_FIELDS.credit));
           for (const raw of ccList) {
@@ -360,6 +391,26 @@ const HotelOffers = () => {
             const baseNorm = toNorm(base);
             if (baseNorm) debitMap.set(baseNorm, debitMap.get(baseNorm) || base);
           }
+
+          // ✅ NEW: if allCards.csv also contains these fields, include them
+          const upiList = splitList(firstField(row, LIST_FIELDS.upi) || firstFieldByContains(row, "upi"));
+          for (const raw of upiList) {
+            const base = brandCanonicalize(getBase(raw));
+            const baseNorm = toNorm(base);
+            if (baseNorm) upiMap.set(baseNorm, upiMap.get(baseNorm) || base);
+          }
+
+          const nbList = splitList(
+            firstField(row, LIST_FIELDS.netbanking) ||
+              firstFieldByContains(row, "netbanking") ||
+              firstFieldByContains(row, "net banking") ||
+              firstFieldByContains(row, "internet banking")
+          );
+          for (const raw of nbList) {
+            const base = brandCanonicalize(getBase(raw));
+            const baseNorm = toNorm(base);
+            if (baseNorm) nbMap.set(baseNorm, nbMap.get(baseNorm) || base);
+          }
         }
 
         const credit = Array.from(creditMap.values())
@@ -369,17 +420,33 @@ const HotelOffers = () => {
           .sort((a, b) => a.localeCompare(b))
           .map((d) => makeEntry(d, "debit"));
 
+        // ✅ NEW
+        const upi = Array.from(upiMap.values())
+          .sort((a, b) => a.localeCompare(b))
+          .map((d) => makeEntry(d, "upi"));
+        const nb = Array.from(nbMap.values())
+          .sort((a, b) => a.localeCompare(b))
+          .map((d) => makeEntry(d, "netbanking"));
+
         setCreditEntries(credit);
         setDebitEntries(debit);
+
+        // ✅ NEW
+        setUpiEntries(upi);
+        setNetbankingEntries(nb);
 
         setFilteredCards([
           ...(credit.length ? [{ type: "heading", label: "Credit Cards" }] : []),
           ...credit,
           ...(debit.length ? [{ type: "heading", label: "Debit Cards" }] : []),
           ...debit,
+          ...(upi.length ? [{ type: "heading", label: "UPI" }] : []),
+          ...upi,
+          ...(nb.length ? [{ type: "heading", label: "NetBanking" }] : []),
+          ...nb,
         ]);
 
-        if (!credit.length && !debit.length) {
+        if (!credit.length && !debit.length && !upi.length && !nb.length) {
           setNoMatches(true);
           setSelected(null);
         }
@@ -420,10 +487,14 @@ const HotelOffers = () => {
     loadOffers();
   }, []);
 
-  /** Build marquee (CC/DC chips) from OFFER CSVs ONLY — exclude allCards.csv */
+  /** Build marquee (CC/DC/UPI/NB chips) from OFFER CSVs ONLY — exclude allCards.csv */
   useEffect(() => {
     const ccMap = new Map(); // baseNorm -> display
     const dcMap = new Map();
+
+    // ✅ NEW
+    const upiMap = new Map();
+    const nbMap = new Map();
 
     const harvestList = (val, targetMap) => {
       for (const raw of splitList(val)) {
@@ -451,6 +522,8 @@ const HotelOffers = () => {
     const harvestByValueScan = (row) => {
       for (const v of Object.values(row || {})) {
         if (!v || typeof v !== "string") continue;
+
+        // cards scan
         const tokens = splitList(v).filter((t) => /\bcard\b/i.test(t));
         for (const tok of tokens) {
           const base = brandCanonicalize(getBase(tok));
@@ -458,6 +531,16 @@ const HotelOffers = () => {
           if (!baseNorm) continue;
           if (valueLooksDebit(tok)) dcMap.set(baseNorm, dcMap.get(baseNorm) || base);
           else if (valueLooksCredit(tok)) ccMap.set(baseNorm, ccMap.get(baseNorm) || base);
+        }
+
+        // ✅ NEW: payment scan
+        const payTokens = splitList(v);
+        for (const tok of payTokens) {
+          const base = brandCanonicalize(getBase(tok));
+          const baseNorm = toNorm(base);
+          if (!baseNorm) continue;
+          if (valueLooksUPI(tok)) upiMap.set(baseNorm, upiMap.get(baseNorm) || base);
+          else if (valueLooksNetBanking(tok)) nbMap.set(baseNorm, nbMap.get(baseNorm) || base);
         }
       }
     };
@@ -473,6 +556,13 @@ const HotelOffers = () => {
         if (creditHeaders.length) {
           creditHeaders.forEach(({ value }) => harvestList(value, ccMap));
         }
+
+        // ✅ NEW: payment headers
+        const upiHeaders = entriesWhereKey(o, (k) => headerLooksUPI(k));
+        const nbHeaders = entriesWhereKey(o, (k) => headerLooksNetBanking(k));
+
+        if (upiHeaders.length) upiHeaders.forEach(({ value }) => harvestList(value, upiMap));
+        if (nbHeaders.length) nbHeaders.forEach(({ value }) => harvestList(value, nbMap));
 
         // mixed: “Eligible Cards”, “Cards”, etc.
         const mixedHeaders = entriesWhereKey(
@@ -490,8 +580,19 @@ const HotelOffers = () => {
         }
 
         // If nothing obvious was added, try scanning any cell values
-        if (!debitHeaders.length && !creditHeaders.length && !mixedHeaders.length) {
+        if (
+          !debitHeaders.length &&
+          !creditHeaders.length &&
+          !mixedHeaders.length &&
+          !upiHeaders.length &&
+          !nbHeaders.length
+        ) {
           harvestByValueScan(o);
+        } else {
+          // still attempt payment scan if fields exist but empty in some rows
+          if (!upiHeaders.length || !nbHeaders.length) {
+            harvestByValueScan(o);
+          }
         }
       }
     };
@@ -517,6 +618,31 @@ const HotelOffers = () => {
 
     setMarqueeCC(Array.from(ccMap.values()).sort((a, b) => a.localeCompare(b)));
     setMarqueeDC(Array.from(dcMap.values()).sort((a, b) => a.localeCompare(b)));
+
+    // ✅ NEW
+    const upiList = Array.from(upiMap.values()).sort((a, b) => a.localeCompare(b));
+    const nbList = Array.from(nbMap.values()).sort((a, b) => a.localeCompare(b));
+    setMarqueeUPI(upiList);
+    setMarqueeNB(nbList);
+
+    // ✅ NEW: also ensure dropdown contains payment method texts from offer CSVs (union)
+    const mergeEntryList = (prev, names, type) => {
+      const map = new Map();
+      (prev || []).forEach((it) => {
+        if (it && it.baseNorm) map.set(it.baseNorm, it.display);
+      });
+      (names || []).forEach((raw) => {
+        const base = brandCanonicalize(getBase(raw));
+        const baseNorm = toNorm(base);
+        if (baseNorm) map.set(baseNorm, map.get(baseNorm) || base);
+      });
+      return Array.from(map.values())
+        .sort((a, b) => a.localeCompare(b))
+        .map((d) => makeEntry(d, type));
+    };
+
+    setUpiEntries((prev) => mergeEntryList(prev, upiList, "upi"));
+    setNetbankingEntries((prev) => mergeEntryList(prev, nbList, "netbanking"));
   }, [
     easeOffers,
     easeMyTripOffers, // ✅ NEW dependency
@@ -543,7 +669,7 @@ const HotelOffers = () => {
     const qLower = trimmed.toLowerCase();
 
     const scored = (arr) =>
-      arr
+      (arr || [])
         .map((it) => {
           const baseScore = scoreCandidate(trimmed, it.display);
           const inc = it.display.toLowerCase().includes(qLower);
@@ -564,7 +690,11 @@ const HotelOffers = () => {
     let cc = scored(creditEntries);
     let dc = scored(debitEntries);
 
-    if (!cc.length && !dc.length) {
+    // ✅ NEW
+    let upi = scored(upiEntries);
+    let nb = scored(netbankingEntries);
+
+    if (!cc.length && !dc.length && !upi.length && !nb.length) {
       setNoMatches(true);
       setSelected(null);
       setFilteredCards([]);
@@ -600,14 +730,52 @@ const HotelOffers = () => {
       qLower.endsWith(" dc") ||
       qLower.includes(" dc ");
 
+    // ✅ NEW: if query hints upi/netbanking → show those sections at top
+    const mentionsUPI =
+      qLower.includes("upi") || qLower === "upi" || qLower.startsWith("upi ") || qLower.endsWith(" upi");
+    const mentionsNB =
+      qLower.includes("netbanking") ||
+      qLower.includes("net banking") ||
+      qLower.includes("internet banking") ||
+      qLower === "nb" ||
+      qLower.startsWith("nb ") ||
+      qLower.endsWith(" nb") ||
+      qLower.includes(" nb ");
+
     setNoMatches(false);
 
-    if (mentionsDebit) {
+    if (mentionsNB) {
+      setFilteredCards([
+        ...(nb.length ? [{ type: "heading", label: "NetBanking" }] : []),
+        ...nb,
+        ...(upi.length ? [{ type: "heading", label: "UPI" }] : []),
+        ...upi,
+        ...(dc.length ? [{ type: "heading", label: "Debit Cards" }] : []),
+        ...dc,
+        ...(cc.length ? [{ type: "heading", label: "Credit Cards" }] : []),
+        ...cc,
+      ]);
+    } else if (mentionsUPI) {
+      setFilteredCards([
+        ...(upi.length ? [{ type: "heading", label: "UPI" }] : []),
+        ...upi,
+        ...(nb.length ? [{ type: "heading", label: "NetBanking" }] : []),
+        ...nb,
+        ...(dc.length ? [{ type: "heading", label: "Debit Cards" }] : []),
+        ...dc,
+        ...(cc.length ? [{ type: "heading", label: "Credit Cards" }] : []),
+        ...cc,
+      ]);
+    } else if (mentionsDebit) {
       setFilteredCards([
         ...(dc.length ? [{ type: "heading", label: "Debit Cards" }] : []),
         ...dc,
         ...(cc.length ? [{ type: "heading", label: "Credit Cards" }] : []),
         ...cc,
+        ...(upi.length ? [{ type: "heading", label: "UPI" }] : []),
+        ...upi,
+        ...(nb.length ? [{ type: "heading", label: "NetBanking" }] : []),
+        ...nb,
       ]);
     } else {
       setFilteredCards([
@@ -615,6 +783,10 @@ const HotelOffers = () => {
         ...cc,
         ...(dc.length ? [{ type: "heading", label: "Debit Cards" }] : []),
         ...dc,
+        ...(upi.length ? [{ type: "heading", label: "UPI" }] : []),
+        ...upi,
+        ...(nb.length ? [{ type: "heading", label: "NetBanking" }] : []),
+        ...nb,
       ]);
     }
   };
@@ -668,6 +840,32 @@ const HotelOffers = () => {
           dc = tokens;
         }
         list = dc;
+      } else if (type === "upi") {
+        const upiExplicit =
+          firstField(o, LIST_FIELDS.upi) ||
+          firstFieldByContains(o, "upi");
+        list = splitList(upiExplicit);
+        if (!list.length) {
+          const tokens = Object.values(o || {})
+            .filter((v) => typeof v === "string")
+            .flatMap((v) => splitList(v))
+            .filter((t) => valueLooksUPI(t));
+          list = tokens;
+        }
+      } else if (type === "netbanking") {
+        const nbExplicit =
+          firstField(o, LIST_FIELDS.netbanking) ||
+          firstFieldByContains(o, "netbanking") ||
+          firstFieldByContains(o, "net banking") ||
+          firstFieldByContains(o, "internet banking");
+        list = splitList(nbExplicit);
+        if (!list.length) {
+          const tokens = Object.values(o || {})
+            .filter((v) => typeof v === "string")
+            .flatMap((v) => splitList(v))
+            .filter((t) => valueLooksNetBanking(t));
+          list = tokens;
+        }
       } else {
         const cc =
           firstField(o, LIST_FIELDS.credit) ||
@@ -695,38 +893,23 @@ const HotelOffers = () => {
     return out;
   }
 
+  const matchType =
+    selected?.type === "debit"
+      ? "debit"
+      : selected?.type === "upi"
+      ? "upi"
+      : selected?.type === "netbanking"
+      ? "netbanking"
+      : "credit";
+
   // Collect then global-dedup
   const wPermanent = matchesFor(permanentOffers, "permanent", "Permanent");
-  const wGoibibo = matchesFor(
-    goibiboOffers,
-    selected?.type === "debit" ? "debit" : "credit",
-    "Goibibo"
-  );
-  const wEase = matchesFor(
-    easeOffers,
-    selected?.type === "debit" ? "debit" : "credit",
-    "EaseMyTrip"
-  );
-  const wEaseMyTrip = matchesFor(
-    easeMyTripOffers,
-    selected?.type === "debit" ? "debit" : "credit",
-    "EaseMyTrip"
-  ); // ✅ NEW
-  const wYatra = matchesFor(
-    yatraOffers,
-    selected?.type === "debit" ? "debit" : "credit",
-    "Yatra"
-  );
-  const wIxigo = matchesFor(
-    ixigoOffers,
-    selected?.type === "debit" ? "debit" : "credit",
-    "Ixigo"
-  );
-  const wMMT = matchesFor(
-    makeMyTripOffers,
-    selected?.type === "debit" ? "debit" : "credit",
-    "MakeMyTrip"
-  );
+  const wGoibibo = matchesFor(goibiboOffers, matchType, "Goibibo");
+  const wEase = matchesFor(easeOffers, matchType, "EaseMyTrip");
+  const wEaseMyTrip = matchesFor(easeMyTripOffers, matchType, "EaseMyTrip"); // ✅ NEW
+  const wYatra = matchesFor(yatraOffers, matchType, "Yatra");
+  const wIxigo = matchesFor(ixigoOffers, matchType, "Ixigo");
+  const wMMT = matchesFor(makeMyTripOffers, matchType, "MakeMyTrip");
 
   const seen = new Set();
   const dPermanent = selected?.type === "credit" ? dedupWrappers(wPermanent, seen) : [];
@@ -746,6 +929,13 @@ const HotelOffers = () => {
       dIxigo.length ||
       dMMT.length
   );
+
+  const sectionPrefix =
+    selected?.type === "upi"
+      ? "UPI offers on "
+      : selected?.type === "netbanking"
+      ? "NetBanking offers on "
+      : "Offers on ";
 
   /** Offer card UI */
   const OfferCard = ({ wrapper, isPermanent = false }) => {
@@ -807,7 +997,10 @@ const HotelOffers = () => {
   return (
     <div className="App" style={{ fontFamily: "'Libre Baskerville', serif" }}>
       {/* Cards-with-offers strip (ONLY from offer CSVs) */}
-      {(marqueeCC.length > 0 || marqueeDC.length > 0) && (
+      {(marqueeCC.length > 0 ||
+        marqueeDC.length > 0 ||
+        marqueeUPI.length > 0 ||
+        marqueeNB.length > 0) && (
         <div
           style={{
             maxWidth: 1200,
@@ -829,7 +1022,7 @@ const HotelOffers = () => {
               justifyContent: "center",
             }}
           >
-            <span>Credit &amp; Debit Cards With Active Hotel Offers</span>
+            <span>Credit, Debit, UPI &amp; NetBanking With Active Hotel Offers</span>
           </div>
 
           {/* CC marquee chips */}
@@ -883,7 +1076,7 @@ const HotelOffers = () => {
             <marquee
               direction="left"
               scrollamount="4"
-              style={{ whiteSpace: "nowrap" }}
+              style={{ marginBottom: 8, whiteSpace: "nowrap" }}
             >
               <strong style={{ marginRight: 10, color: "#1F2D45" }}>
                 Debit Cards:
@@ -917,6 +1110,96 @@ const HotelOffers = () => {
                     (e.currentTarget.style.background = "#fff")
                   }
                   title="Click to select this card"
+                >
+                  {name}
+                </span>
+              ))}
+            </marquee>
+          )}
+
+          {/* ✅ NEW: UPI marquee chips */}
+          {marqueeUPI.length > 0 && (
+            <marquee
+              direction="left"
+              scrollamount="4"
+              style={{ marginBottom: 8, whiteSpace: "nowrap" }}
+            >
+              <strong style={{ marginRight: 10, color: "#1F2D45" }}>UPI:</strong>
+              {marqueeUPI.map((name, idx) => (
+                <span
+                  key={`upi-chip-${idx}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleChipClick(name, "upi")}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" ? handleChipClick(name, "upi") : null
+                  }
+                  style={{
+                    display: "inline-block",
+                    padding: "6px 10px",
+                    border: "1px solid #E0E6EE",
+                    borderRadius: 9999,
+                    marginRight: 8,
+                    background: "#fff",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                    cursor: "pointer",
+                    fontSize: 14,
+                    lineHeight: 1.2,
+                    userSelect: "none",
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.background = "#F0F5FF")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.background = "#fff")
+                  }
+                  title="Click to select this UPI option"
+                >
+                  {name}
+                </span>
+              ))}
+            </marquee>
+          )}
+
+          {/* ✅ NEW: NetBanking marquee chips */}
+          {marqueeNB.length > 0 && (
+            <marquee
+              direction="left"
+              scrollamount="4"
+              style={{ whiteSpace: "nowrap" }}
+            >
+              <strong style={{ marginRight: 10, color: "#1F2D45" }}>
+                NetBanking:
+              </strong>
+              {marqueeNB.map((name, idx) => (
+                <span
+                  key={`nb-chip-${idx}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleChipClick(name, "netbanking")}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" ? handleChipClick(name, "netbanking") : null
+                  }
+                  style={{
+                    display: "inline-block",
+                    padding: "6px 10px",
+                    border: "1px solid #E0E6EE",
+                    borderRadius: 9999,
+                    marginRight: 8,
+                    background: "#fff",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                    cursor: "pointer",
+                    fontSize: 14,
+                    lineHeight: 1.2,
+                    userSelect: "none",
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.background = "#F0F5FF")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.background = "#fff")
+                  }
+                  title="Click to select this NetBanking option"
                 >
                   {name}
                 </span>
@@ -1016,7 +1299,9 @@ const HotelOffers = () => {
 
           {!!dGoibibo.length && (
             <div className="offer-group">
-              <h2 style={{ textAlign: "center" }}>Offers on Goibibo</h2>
+              <h2 style={{ textAlign: "center" }}>
+                {sectionPrefix}Goibibo
+              </h2>
               <div className="offer-grid">
                 {dGoibibo.map((w, i) => (
                   <OfferCard key={`go-${i}`} wrapper={w} />
@@ -1027,7 +1312,9 @@ const HotelOffers = () => {
 
           {!!dEase.length && (
             <div className="offer-group">
-              <h2 style={{ textAlign: "center" }}>Offers on ClearTrip</h2>
+              <h2 style={{ textAlign: "center" }}>
+                {sectionPrefix}ClearTrip
+              </h2>
               <div className="offer-grid">
                 {dEase.map((w, i) => (
                   <OfferCard key={`emt-${i}`} wrapper={w} />
@@ -1038,7 +1325,9 @@ const HotelOffers = () => {
 
           {!!dEaseMyTrip.length && (
             <div className="offer-group">
-              <h2 style={{ textAlign: "center" }}>Offers on EaseMyTrip</h2>
+              <h2 style={{ textAlign: "center" }}>
+                {sectionPrefix}EaseMyTrip
+              </h2>
               <div className="offer-grid">
                 {dEaseMyTrip.map((w, i) => (
                   <OfferCard key={`emt2-${i}`} wrapper={w} />
@@ -1049,7 +1338,9 @@ const HotelOffers = () => {
 
           {!!dYatra.length && (
             <div className="offer-group">
-              <h2 style={{ textAlign: "center" }}>Offers on Yatra</h2>
+              <h2 style={{ textAlign: "center" }}>
+                {sectionPrefix}Yatra
+              </h2>
               <div className="offer-grid">
                 {dYatra.map((w, i) => (
                   <OfferCard key={`y-${i}`} wrapper={w} />
@@ -1060,7 +1351,9 @@ const HotelOffers = () => {
 
           {!!dIxigo.length && (
             <div className="offer-group">
-              <h2 style={{ textAlign: "center" }}>Offers on Ixigo</h2>
+              <h2 style={{ textAlign: "center" }}>
+                {sectionPrefix}Ixigo
+              </h2>
               <div className="offer-grid">
                 {dIxigo.map((w, i) => (
                   <OfferCard key={`ix-${i}`} wrapper={w} />
@@ -1071,7 +1364,9 @@ const HotelOffers = () => {
 
           {!!dMMT.length && (
             <div className="offer-group">
-              <h2 style={{ textAlign: "center" }}>Offers on MakeMyTrip</h2>
+              <h2 style={{ textAlign: "center" }}>
+                {sectionPrefix}MakeMyTrip
+              </h2>
               <div className="offer-grid">
                 {dMMT.map((w, i) => (
                   <OfferCard key={`mmt-${i}`} wrapper={w} />
